@@ -26,6 +26,22 @@ library LibAddressSet {
     function count(AddressSet storage s) internal view returns (uint256) {
         return s.addrs.length;
     }
+
+    function forEach(AddressSet storage s, function(address) external returns (address[] memory) func) internal {
+        for (uint256 i; i < s.addrs.length; ++i) {
+            func(s.addrs[i]);
+        }
+    }
+
+    function reduce(AddressSet storage s, uint256 acc, function(uint256,address) external returns (uint256) func)
+        internal
+        returns (uint256)
+    {
+        for (uint256 i; i < s.addrs.length; ++i) {
+            acc = func(acc, s.addrs[i]);
+        }
+        return acc;
+    }
 }
 
 contract Handler is CommonBase, StdCheats, StdUtils {
@@ -84,6 +100,17 @@ contract Handler is CommonBase, StdCheats, StdUtils {
 
         require(success, "sendFallback failed");
         ghost_depositSum += amount;
+    }
+
+    // function forEachActor(function(address) external func) public {
+    //     return _actors.forEach(func);
+    // }
+
+    function reduceActors(uint256 acc, function(uint256,address) external returns (uint256) func)
+        public
+        returns (uint256)
+    {
+        return _actors.reduce(acc, func);
     }
 
     function _pay(address to, uint256 amount) internal {
