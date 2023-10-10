@@ -49,6 +49,20 @@ contract WETH9Invriants is Test {
         uint256 sumOfBalances = handler.reduceActors(0, this.accumulateBalance);
         assertEq(address(weth).balance, sumOfBalances);
     }
+    // No individual account balance can exceed the
+    // WETH totalSupply().
+
+    function invariant_depositorBalances() public {
+        handler.forEachActor(this.assertAccountBalanceLteTotalSupply);
+    }
+
+    function invariant_callSummary() public view {
+        handler.callSummary();
+    }
+
+    function assertAccountBalanceLteTotalSupply(address account) external {
+        assertLe(weth.balanceOf(account), weth.totalSupply());
+    }
 
     function accumulateBalance(uint256 balance, address caller) external view returns (uint256) {
         return balance + weth.balanceOf(caller);
