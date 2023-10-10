@@ -39,6 +39,11 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         _;
     }
 
+    modifier useActor(uint256 actorSeed) {
+        currentActor = _actors.rand(actorSeed);
+        _;
+    }
+
     function actors() external returns (address[] memory) {
         return _actors.addrs;
     }
@@ -53,11 +58,11 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         ghost_depositSum += amount;
     }
 
-    function withdraw(uint256 amount) public countCall("withdraw") {
-        amount = bound(amount, 0, weth.balanceOf(msg.sender));
+    function withdraw(uint256 actorSeed, uint256 amount) public useActor(actorSeed) countCall("withdraw") {
+        amount = bound(amount, 0, weth.balanceOf(currentActor));
         if (amount == 0) ghost_zeroWithdrawals++;
 
-        vm.startPrank(msg.sender);
+        vm.startPrank(currentActor);
         weth.withdraw(amount);
         _pay(address(this), amount);
         vm.stopPrank();
@@ -74,6 +79,51 @@ contract Handler is CommonBase, StdCheats, StdUtils {
 
         require(success, "sendFallback failed");
         ghost_depositSum += amount;
+    }
+
+    function approve(uint256 actorSeed, uint256 spenderSeed, uint256 amount)
+        public
+        useActor(actorSeed)
+        countCall("approve")
+    {
+        address spender = _actors.rand(spenderSeed);
+
+        vm.prank(currentActor);
+        weth.approve(spender, amount);
+    }
+
+    function transfer(uint256 actorSeed, uint256 toSeed, uint256 amount)
+        public
+        useActor(actorSeed)
+        countCall("transfer")
+    {
+        address to = _actors.rand(toSeed);
+
+        amount = bound(amount, 0, weth.balanceOf(currentActor));
+
+        vm.prank(currentActor);
+        weth.transfer(to, amount);
+    }
+
+    function transferFrom(uint256 actorSeed, uint256 fromSeed, uint256 toSeed, bool _approve, uint256 amount)
+        public
+        useActor(actorSeed)
+        countCall("transferFrom")
+    {
+        address from = _actors.rand(fromSeed);
+        address to = _actors.rand(toSeed);
+
+        amount = bound(amount, 0, weth.balanceOf(from));
+
+        if (_approve) {
+            vm.prank(from);
+            weth.approve(currentActor, amount);
+        } else {
+            amount = bound(amount, 0, weth.allowance(currentActor, from));
+        }
+
+        vm.prank(currentActor);
+        weth.transferFrom(from, to, amount);
     }
 
     function forEachActor(function(address) external func) public {

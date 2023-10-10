@@ -16,7 +16,7 @@ contract WETH9 {
     }
 
     function deposit() public payable {
-        balanceOf[msg.sender] += msg.value;
+        balanceOf[msg.sender] += 1;
         emit Deposit(msg.sender, msg.value);
     }
 
