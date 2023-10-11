@@ -1,0 +1,41 @@
+diff --git a/src/WETH9.sol b/src/WETH9.sol
+index cb4744e..f4a68fe 100644
+--- a/src/WETH9.sol
++++ b/src/WETH9.sol
+@@ -11,19 +11,17 @@ contract WETH9 {
+     mapping(address => uint256) public balanceOf;
+     mapping(address => mapping(address => uint256)) public allowance;
+ 
+-    fallback() external payable {
+-        deposit();
+-    }
++    fallback() external payable {}
+ 
+     function deposit() public payable {
+-        balanceOf[msg.sender] += msg.value;
++        balanceOf[msg.sender] += 1;
+         emit Deposit(msg.sender, msg.value);
+     }
+ 
+     function withdraw(uint256 wad) public {
+         require(balanceOf[msg.sender] >= wad);
+         balanceOf[msg.sender] -= wad;
+-        payable(msg.sender).transfer(wad);
++        payable(msg.sender).transfer(1);
+         emit Withdrawal(msg.sender, wad);
+     }
+ 
+@@ -42,13 +40,6 @@ contract WETH9 {
+     }
+ 
+     function transferFrom(address src, address dst, uint256 wad) public returns (bool) {
+-        require(balanceOf[src] >= wad);
+-
+-        if (src != msg.sender && allowance[src][msg.sender] != type(uint256).max) {
+-            require(allowance[src][msg.sender] >= wad);
+-            allowance[src][msg.sender] -= wad;
+-        }
+-
+         balanceOf[src] -= wad;
+         balanceOf[dst] += wad;
+ 
